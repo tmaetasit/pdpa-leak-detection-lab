@@ -9,8 +9,10 @@
 
   Monitor mode only: these rules alert, they never block.
 
-  Levels: 3 = record only, 5 = low (logged, nobody paged),
-          10 = high, 12 = critical, 13 = correlated with FIM.
+  Levels: 3 = record only, 5 = low (logged, nobody paged), 7 = low to shadow AI,
+          10 = high, 12 = critical (one sensor),
+          15 = confirmed by two sensors (FIM + content scan). The dashboard
+          counts level 15+ as Critical, so only confirmed incidents land there.
 -->
 <group name="pdpa,dlp,">
 
@@ -69,23 +71,73 @@
 
   <!-- Correlation (Day 3): a FIM "file added" event (Wazuh rule 554) within
        120 s before a critical scan. Two independent sensors agreeing raises
-       confidence. One rule per destination so the MITRE ID is kept.
+       confidence, so these are level 15 (dashboard "Critical"). One rule per destination so the MITRE ID is kept.
        Limits: the lab has one endpoint, and Wazuh cannot compare the FIM path
        (syscheck.path, lower-cased) with the scanner's "file" field, so this
        proves "a file was added and a critical scan followed", not that both
        events are the same file. -->
-  <rule id="100130" level="13" timeframe="120">
+  <rule id="100130" level="15" timeframe="120">
     <if_sid>100120</if_sid>
     <if_matched_sid>554</if_matched_sid>
     <description>PDPA CONFIRMED: FIM and content scan agree, $(match_count) Thai IDs copied to USB by $(dstuser): $(file)</description>
     <mitre><id>T1052.001</id></mitre>
   </rule>
 
-  <rule id="100131" level="13" timeframe="120">
+  <rule id="100131" level="15" timeframe="120">
     <if_sid>100121</if_sid>
     <if_matched_sid>554</if_matched_sid>
     <description>PDPA CONFIRMED: FIM and content scan agree, $(match_count) Thai IDs placed in a cloud sync folder by $(dstuser): $(file)</description>
     <mitre><id>T1567.002</id></mitre>
+  </rule>
+
+  <!-- Day 4: web uploads seen by the mini SWG (swg/pdpa_swg_addon.py).
+       The addon reuses the scanner, so its events are tool=pdpa-scanner with
+       location_type=web_upload and pass through 100110/100111/100112 first.
+       Extra fields from the mini Cloud Registry: dest_name, dest_category,
+       dest_risk (low/medium/high), dest_sanctioned (yes/no), action. -->
+  <rule id="100122" level="12">
+    <if_sid>100112</if_sid>
+    <field name="location_type">^web_upload$</field>
+    <description>PDPA CRITICAL: $(match_count) Thai IDs uploaded to $(dest_name) [$(dest_category), risk $(dest_risk), sanctioned $(dest_sanctioned)] by $(dstuser): $(file) ($(action))</description>
+    <mitre><id>T1567</id></mitre>
+  </rule>
+
+  <!-- Risk-based escalation: 10-49 IDs is "high", but sent to an unsanctioned
+       high-risk service (shadow AI, anonymous file share) it is treated as critical. -->
+  <rule id="100123" level="12">
+    <if_sid>100111</if_sid>
+    <field name="location_type">^web_upload$</field>
+    <field name="dest_sanctioned">^no$</field>
+    <field name="dest_risk">^high$</field>
+    <description>PDPA ESCALATED: $(match_count) Thai IDs sent to unsanctioned high-risk $(dest_name) [$(dest_category)] by $(dstuser): $(file) ($(action))</description>
+    <mitre><id>T1567</id></mitre>
+  </rule>
+
+  <!-- A few IDs pasted or uploaded to an unsanctioned AI service: above the
+       usual "low" level 5 because prompts to shadow AI rarely have a business reason. -->
+  <rule id="100124" level="7">
+    <if_sid>100110</if_sid>
+    <field name="location_type">^web_upload$</field>
+    <field name="dest_category">^genai$</field>
+    <field name="dest_sanctioned">^no$</field>
+    <description>PDPA: $(match_count) Thai ID(s) sent to unsanctioned AI $(dest_name) by $(dstuser): $(file) ($(action))</description>
+    <mitre><id>T1567</id></mitre>
+  </rule>
+
+  <!-- Discovery (CASB-style): uploads to registry services with no Thai ID. -->
+  <rule id="100140" level="3">
+    <if_sid>100100</if_sid>
+    <field name="location_type">^web_upload$</field>
+    <field name="event">^clean$|^skipped$</field>
+    <description>SWG: $(file) uploaded to $(dest_name) [$(dest_category), risk $(dest_risk)] by $(dstuser), no Thai ID found</description>
+  </rule>
+
+  <rule id="100141" level="5">
+    <if_sid>100140</if_sid>
+    <field name="dest_category">^genai$</field>
+    <field name="dest_sanctioned">^no$</field>
+    <description>Shadow AI: $(dstuser) uploaded $(file) to unsanctioned AI service $(dest_name) (risk $(dest_risk), $(action))</description>
+    <mitre><id>T1567</id></mitre>
   </rule>
 
 </group>

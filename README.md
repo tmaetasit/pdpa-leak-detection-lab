@@ -36,7 +36,7 @@ Windows endpoint                         Ubuntu server
 | Lab component | Role | Commercial equivalent |
 | --- | --- | --- |
 | `scanner/` | Content inspection for Thai national IDs | DLP endpoint agent (e.g. Trellix DLP) |
-| mitmproxy + cloud registry (Day 4) | Web traffic inspection, risk-rated destinations | SWG / CASB (e.g. Skyhigh) |
+| `swg/` mitmproxy + cloud registry | Web traffic inspection, risk-rated destinations | SWG / CASB (e.g. Skyhigh) |
 | Sysmon + Wazuh agent | Endpoint telemetry | EDR sensor (e.g. Trend Micro) |
 | Wazuh manager | Log collection, rules, correlation | SIEM / management console |
 
@@ -50,7 +50,11 @@ then enable blocking.
 | --- | --- | --- |
 | low | 1–9 | 5 (logged only) |
 | high | 10–49 | 10 |
-| critical | 50+ | 12 (13 when FIM confirms) |
+| critical | 50+ | 12 (15 when FIM confirms) |
+
+Only incidents confirmed by two sensors reach level 15, which the Wazuh
+dashboard counts as **Critical**. A single-sensor critical (level 12) shows as High.
+Web uploads add risk-based escalation from the cloud registry (see below).
 
 ## USB scenario (Day 3, verified end to end)
 
@@ -62,7 +66,7 @@ FAT32, drive `E:`. The watcher picks the stick up on its own
 | --- | --- | --- | --- | --- |
 | `E:\pdpa-nofim\` (no FIM) | 0994_pii.xlsx | critical, 120 IDs, usb | 100120, level 12 | T1052.001 |
 | `E:\pdpa-test\` (FIM realtime) | 0092_pii.txt | high, 13 IDs, usb | 100111, level 10 | - |
-| `E:\pdpa-test\` (FIM realtime) | 0996_pii.txt | critical, 60 IDs, usb | 554 then 100130, level 13 | T1052.001 |
+| `E:\pdpa-test\` (FIM realtime) | 0996_pii.txt | critical, 60 IDs, usb | 554 then 100130, level 13 (now 15) | T1052.001 |
 
 Correlation (100130 USB, 100131 cloud sync) fires when FIM reports a file
 added (rule 554) up to 120 s before a critical scan. Wazuh cannot compare the
@@ -74,6 +78,35 @@ read permissions and drops the event without an error at normal log level.
 The USB folder therefore uses `check_all="no" check_size="yes" check_mtime="yes" check_sum="yes"`
 (see `wazuh/agent_ossec_snippet.xml`).
 
+## Shadow AI upload scenario (Day 4)
+
+A mini Secure Web Gateway: mitmproxy on the Ubuntu VM (`192.168.56.102:8080`),
+the Windows VM's browser uses it as an explicit proxy and trusts its CA.
+`swg/pdpa_swg_addon.py` pulls uploaded files and pasted prompt text out of each
+request (multipart, JSON, form or raw body), scans them with the same scanner,
+looks the destination up in a mini Cloud Registry (`swg/cloud_registry.json`:
+category, risk, sanctioned) and writes JSON that the Wazuh manager reads.
+
+| Upload | Wazuh rule | Level | MITRE |
+| --- | --- | --- | --- |
+| 50+ IDs to any web destination | 100122 | 12 | T1567 |
+| 10–49 IDs to an unsanctioned high-risk service | 100123 (escalated) | 12 | T1567 |
+| 10–49 IDs to a sanctioned service (Corp Copilot) | 100111 | 10 | - |
+| 1–9 IDs pasted/uploaded to unsanctioned AI | 100124 | 7 | T1567 |
+| File with no ID to unsanctioned AI (shadow AI discovery) | 100141 | 5 | T1567 |
+| File with no ID to another registry service | 100140 | 3 | - |
+
+Bypass works at two layers, as in a commercial SWG: the Windows proxy
+override keeps lab traffic off the proxy, and the registry's `no_decrypt`
+list passes banking, health and Microsoft update/login traffic through
+without TLS inspection.
+
+Lab safety: tests use only `*.test` sites (reserved names) served by
+`swg/mock_ai_site.py`, which stores nothing. A safety guard in the addon
+answers any file upload to a real registry service, or any Thai ID sent to a
+real site, with a local 403, so no test data leaves the lab. Setup and test
+steps: `docs/day4-swg.md`.
+
 ## ISO/IEC 27001:2022 Annex A mapping
 
 | Control | Where in the lab |
@@ -81,7 +114,7 @@ The USB folder therefore uses `check_all="no" check_size="yes" check_mtime="yes"
 | 8.12 Data leakage prevention | Scanner, USB and upload scenarios |
 | 8.15 Logging | JSON event log, masked values only |
 | 8.16 Monitoring activities | Wazuh rules and dashboard |
-| 8.23 Web filtering | Mini SWG with cloud registry (Day 4) |
+| 8.23 Web filtering | Mini SWG with cloud registry and TLS inspection bypass list |
 
 ## Repository
 
@@ -94,7 +127,13 @@ datagen/generate.py     synthetic test set with ground truth
 datagen/evaluate.py     before/after scoring
 wazuh/pdpa_rules.xml    custom Wazuh rules (levels, MITRE, correlation)
 wazuh/agent_ossec_snippet.xml   agent config
+wazuh/manager_ossec_snippet.xml manager reads the SWG log
+swg/pdpa_swg_addon.py   mitmproxy addon: extract uploads, scan, log
+swg/cloud_registry.json mini Cloud Registry + TLS no-decrypt list
+swg/mock_ai_site.py     lab-only fake AI / file-share site
+swg/sample_events.jsonl sample SWG events for wazuh-logtest
 docs/day1-setup.md      lab setup guide (Thai)
+docs/day4-swg.md        mini SWG setup and tests (Thai)
 ```
 
 ## Quick start
@@ -118,6 +157,6 @@ paths, then `python -m scanner.watcher --config config.json`.
 - [x] Wazuh rules verified on the manager (wazuh-logtest + live alerts)
 - [x] Lab build (Day 1)
 - [x] USB scenario verified end to end (Day 3)
-- [ ] Mini SWG: Shadow AI upload detection (Day 4)
+- [ ] Mini SWG: Shadow AI upload detection (Day 4): code and rules done, lab test pending
 - [ ] PowerShell exfiltration via Sysmon (Day 5)
 - [ ] Dashboard, demo video, case study (Days 6–7)

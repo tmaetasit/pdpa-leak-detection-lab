@@ -1,0 +1,32 @@
+{
+  "_comment": "Mini Cloud Registry for the lab SWG. Like a CASB cloud registry: each destination has a category, a risk level (low/medium/high), a 1-10 risk score and whether the company sanctions it. Domains match exactly or as a parent domain (claude.ai also matches www.claude.ai). Entries ending in .test are lab-only sites served by swg/mock_ai_site.py on the Ubuntu VM.",
+  "version": "2026-11-08",
+  "services": [
+    {"name": "ShadowAI Chat (lab)",   "domains": ["chat.shadow-ai.test"],   "category": "genai",         "risk": "high",   "score": 9, "sanctioned": false},
+    {"name": "QuickShare (lab)",      "domains": ["files.quickshare.test"], "category": "file_sharing",  "risk": "high",   "score": 8, "sanctioned": false},
+    {"name": "Corp Copilot (lab)",    "domains": ["copilot.corp.test"],     "category": "genai",         "risk": "low",    "score": 2, "sanctioned": true},
+
+    {"name": "ChatGPT",               "domains": ["chatgpt.com", "chat.openai.com"], "category": "genai", "risk": "high",   "score": 7, "sanctioned": false},
+    {"name": "Claude",                "domains": ["claude.ai"],             "category": "genai",         "risk": "high",   "score": 7, "sanctioned": false},
+    {"name": "Google Gemini",         "domains": ["gemini.google.com"],     "category": "genai",         "risk": "high",   "score": 7, "sanctioned": false},
+    {"name": "DeepSeek",              "domains": ["deepseek.com", "chat.deepseek.com"], "category": "genai", "risk": "high", "score": 9, "sanctioned": false},
+    {"name": "Perplexity",            "domains": ["perplexity.ai"],         "category": "genai",         "risk": "high",   "score": 7, "sanctioned": false},
+    {"name": "Poe",                   "domains": ["poe.com"],               "category": "genai",         "risk": "high",   "score": 8, "sanctioned": false},
+    {"name": "Microsoft 365 Copilot", "domains": ["copilot.microsoft.com", "m365.cloud.microsoft"], "category": "genai", "risk": "low", "score": 3, "sanctioned": true},
+
+    {"name": "WeTransfer",            "domains": ["wetransfer.com"],        "category": "file_sharing",  "risk": "high",   "score": 8, "sanctioned": false},
+    {"name": "MEGA",                  "domains": ["mega.nz", "mega.io"],    "category": "file_sharing",  "risk": "high",   "score": 9, "sanctioned": false},
+    {"name": "Pastebin",              "domains": ["pastebin.com"],          "category": "file_sharing",  "risk": "high",   "score": 9, "sanctioned": false},
+    {"name": "Google Drive",          "domains": ["drive.google.com", "docs.google.com"], "category": "cloud_storage", "risk": "medium", "score": 5, "sanctioned": false},
+    {"name": "Dropbox",               "domains": ["dropbox.com"],           "category": "cloud_storage", "risk": "medium", "score": 5, "sanctioned": false},
+    {"name": "OneDrive / SharePoint", "domains": ["onedrive.live.com", "sharepoint.com"], "category": "cloud_storage", "risk": "low", "score": 2, "sanctioned": true}
+  ],
+
+  "_no_decrypt_comment": "TLS inspection exemptions: the proxy passes these through without decrypting (privacy for banking/health, and services that pin certificates). Same idea as SSL inspection bypass lists in a commercial SWG.",
+  "no_decrypt": [
+    "scb.co.th", "kasikornbank.com", "kbank.co.th", "krungthai.com", "bangkokbank.com", "krungsri.com",
+    "bumrungrad.com", "samitivejhospitals.com",
+    "windowsupdate.com", "update.microsoft.com", "delivery.mp.microsoft.com",
+    "login.microsoftonline.com", "login.live.com"
+  ]
+}

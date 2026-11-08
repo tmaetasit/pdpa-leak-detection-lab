@@ -1,0 +1,5 @@
+# Mini SWG on the Ubuntu VM (Python 3.12+). The scanner needs only these two
+# extractors; watchdog/psutil are endpoint-only.
+mitmproxy==12.3.1
+openpyxl>=3.1
+python-docx>=1.1

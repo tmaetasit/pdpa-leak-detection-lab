@@ -1,0 +1,21 @@
+[Unit]
+Description=PDPA lab mini SWG (mitmproxy + Thai ID scanner)
+After=network-online.target pdpa-mock-site.service
+Wants=network-online.target
+
+[Service]
+User=maetasit
+WorkingDirectory=/home/maetasit/pdpa-lab
+# PDPA_CLIENTS maps client IPs to user names, e.g. 192.168.56.101=tt
+EnvironmentFile=-/etc/default/pdpa-swg
+ExecStart=/home/maetasit/pdpa-lab/.venv/bin/mitmdump \
+    -s swg/pdpa_swg_addon.py \
+    --listen-host 192.168.56.102 -p 8080 \
+    --set connection_strategy=lazy \
+    --set flow_detail=1 \
+    --set pdpa_log=/var/log/pdpa-swg/swg.json \
+    --set pdpa_clients=${PDPA_CLIENTS}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

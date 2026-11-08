@@ -1,0 +1,13 @@
+<!--
+  Day 4: append to /var/ossec/etc/ossec.conf on the Wazuh manager (Ubuntu VM)
+  so the manager reads the mini SWG log itself. Alerts show agent 000 (the
+  manager) as the source; the endpoint is in srcip and the user in dstuser.
+    sudo tee -a /var/ossec/etc/ossec.conf < wazuh/manager_ossec_snippet.xml
+    sudo systemctl restart wazuh-manager
+-->
+<ossec_config>
+  <localfile>
+    <log_format>json</log_format>
+    <location>/var/log/pdpa-swg/swg.json</location>
+  </localfile>
+</ossec_config>

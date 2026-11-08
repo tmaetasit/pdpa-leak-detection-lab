@@ -1,0 +1,12 @@
+[Unit]
+Description=PDPA lab mock AI / file-share site (*.test), localhost only
+After=network.target
+
+[Service]
+User=maetasit
+WorkingDirectory=/home/maetasit/pdpa-lab
+ExecStart=/usr/bin/python3 swg/mock_ai_site.py --bind 127.0.0.1 --port 8000
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
