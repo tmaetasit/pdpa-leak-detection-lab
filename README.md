@@ -107,7 +107,7 @@ appears later, logcollector starts at its end and skips the first events.
 Also tested as a user would, in Edge: a prompt with three synthetic IDs
 pasted into `https://chat.shadow-ai.test` raised 100124 and a file upload
 raised 100122 (`docs/screenshots/day4-edge-prompt.jpg`,
-`docs/screenshots/day4-swg-alerts.jpg`). The TLS bypass was checked from the
+`docs/screenshots/day4-swg-alerts.jpg`, `docs/screenshots/day4-100123-mitre.jpg`). The TLS bypass was checked from the
 endpoint: `www.scb.co.th` presents its real GlobalSign certificate through
 the proxy, while the lab site and github.com present the mitmproxy CA.
 
