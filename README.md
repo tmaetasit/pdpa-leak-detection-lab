@@ -23,6 +23,29 @@ pass the check digit by chance (about 1 in 10); the severity threshold keeps
 all of them at **low**, so no false positive reaches a high or critical alert.
 Reproduce with `python -m datagen.generate && python -m datagen.evaluate`.
 
+## End-to-end result (Day 6)
+
+All 1,000 synthetic files were uploaded from the Windows endpoint through the
+mini SWG to the lab "ShadowAI Chat" site (156 s), and every Wazuh alert was
+matched back to its file and scored against the ground truth
+(`python -m datagen.pipeline_eval`, result in `docs/results/pipeline_day6.json`):
+
+| Measure | Result |
+| --- | --- |
+| Files with real-format IDs that raised a PDPA alert | 403 / 403 (recall 100%) |
+| Alerts that page an analyst (level 12: 100122/100123) | 164, all correct (precision 100%) |
+| Files that should page (10+ IDs) but did not | 0 |
+| Decoy files with a checksum-passing random number | 270, all at level 7 (100124), none paged |
+| Clean and decoy files with no ID alert | 327 (only the level 3–5 "upload seen" record) |
+
+The 270 low alerts are the same chance checksum passes measured on Day 2;
+the destination raised them from level 5 to 7 because the site is an
+unsanctioned AI service, but the severity threshold kept every one of them
+below the level that pages an analyst.
+
+Wazuh dashboard: import `wazuh/dashboard/pdpa-dashboard.ndjson` in
+Dashboards Management → Saved objects → Import (`docs/screenshots/day6-dashboard.jpg`).
+
 ## How it works
 
 ```
@@ -161,7 +184,9 @@ scanner/extract.py      text from .txt .csv .xlsx .docx (UTF-8 and TIS-620)
 scanner/scan.py         scan a file or folder -> JSON event
 scanner/watcher.py      watch sync folders + auto-detect USB drives
 datagen/generate.py     synthetic test set with ground truth
-datagen/evaluate.py     before/after scoring
+datagen/evaluate.py     before/after scoring (scanner)
+datagen/pipeline_eval.py end-to-end scoring from Wazuh alerts
+wazuh/dashboard/pdpa-dashboard.ndjson  Wazuh dashboard (Saved objects import)
 wazuh/pdpa_rules.xml    custom Wazuh rules (levels, MITRE, correlation)
 wazuh/agent_ossec_snippet.xml   agent config
 wazuh/manager_ossec_snippet.xml manager reads the SWG log
@@ -199,4 +224,5 @@ paths, then `python -m scanner.watcher --config config.json`.
 - [x] USB scenario verified end to end (Day 3)
 - [x] Mini SWG: Shadow AI upload detection verified end to end (Day 4)
 - [x] PowerShell upload detection via Sysmon + Script Block Logging, correlated with the SWG (Day 5)
-- [ ] Dashboard, demo video, case study (Days 6–7)
+- [x] End-to-end scoring on 1,000 files and Wazuh dashboard (Day 6)
+- [ ] Demo video, case study (Day 7)

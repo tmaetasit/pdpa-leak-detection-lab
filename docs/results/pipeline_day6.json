@@ -1,0 +1,17 @@
+{
+ "run": "2026-11-08T15:45:21Z, 1,000 synthetic files uploaded from win-endpoint-01 through the mini SWG to chat.shadow-ai.test (unsanctioned GenAI, risk high) in 156 s",
+ "files": 1000,
+ "truth_pii": 403,
+ "truth_decoy": 360,
+ "truth_clean": 237,
+ "pii_detected": 403,
+ "missed_pii": 0,
+ "false_id_alert": 270,
+ "clean_correct": 327,
+ "should_page": 164,
+ "paged": 164,
+ "paged_correct": 164,
+ "recall_any_alert": 1.0,
+ "page_precision": 1.0,
+ "page_recall": 1.0
+}
