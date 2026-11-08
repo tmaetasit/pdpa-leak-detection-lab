@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#444"/>
+    </marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b42318"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="700" fill="#ffffff"/>
+  <text x="600" y="38" text-anchor="middle" font-size="22" font-weight="700" fill="#1a1a1a">PDPA Data Leak Detection Lab: architecture</text>
+  <text x="600" y="62" text-anchor="middle" font-size="13" fill="#555">VirtualBox host-only network 192.168.56.0/24 · synthetic data only · monitor mode (alert, never block)</text>
+
+  <!-- Windows endpoint -->
+  <rect x="30" y="90" width="400" height="520" rx="12" fill="#eef4fb" stroke="#4a78b5" stroke-width="1.5"/>
+  <text x="50" y="118" font-size="16" font-weight="700" fill="#1f3f6b">Windows 11 endpoint</text>
+  <text x="50" y="138" font-size="12" fill="#1f3f6b">win-endpoint-01 · 192.168.56.103 · user tt</text>
+
+  <rect x="50" y="155" width="360" height="92" rx="8" fill="#fff" stroke="#4a78b5"/>
+  <text x="65" y="178" font-size="14" font-weight="600" fill="#1a1a1a">Python scanner + watcher</text>
+  <text x="65" y="198" font-size="12" fill="#333">Thai ID regex + check digit + masking</text>
+  <text x="65" y="216" font-size="12" fill="#333">watches USB (E:) and cloud sync folders</text>
+  <text x="65" y="234" font-size="12" fill="#555">→ pdpa-scanner.json  (≈ DLP endpoint)</text>
+
+  <rect x="50" y="260" width="175" height="78" rx="8" fill="#fff" stroke="#4a78b5"/>
+  <text x="62" y="283" font-size="14" font-weight="600" fill="#1a1a1a">Sysmon</text>
+  <text x="62" y="302" font-size="12" fill="#333">Event 1 process</text>
+  <text x="62" y="320" font-size="12" fill="#555">(≈ EDR sensor)</text>
+
+  <rect x="235" y="260" width="175" height="78" rx="8" fill="#fff" stroke="#4a78b5"/>
+  <text x="247" y="283" font-size="14" font-weight="600" fill="#1a1a1a">PowerShell 4104</text>
+  <text x="247" y="302" font-size="12" fill="#333">Script Block Logging</text>
+  <text x="247" y="320" font-size="12" fill="#555">+ FIM realtime</text>
+
+  <rect x="50" y="352" width="360" height="56" rx="8" fill="#1f3f6b"/>
+  <text x="230" y="377" text-anchor="middle" font-size="14" font-weight="600" fill="#fff">Wazuh agent</text>
+  <text x="230" y="396" text-anchor="middle" font-size="12" fill="#dbe7f5">JSON log · eventchannel · syscheck</text>
+
+  <rect x="50" y="430" width="360" height="62" rx="8" fill="#fff" stroke="#4a78b5" stroke-dasharray="5 4"/>
+  <text x="65" y="454" font-size="14" font-weight="600" fill="#1a1a1a">Edge · curl.exe (via PowerShell)</text>
+  <text x="65" y="474" font-size="12" fill="#333">system proxy 192.168.56.102:8080 + lab CA</text>
+
+  <rect x="50" y="510" width="170" height="80" rx="8" fill="#fff7ed" stroke="#c4320a"/>
+  <text x="62" y="533" font-size="13" font-weight="600" fill="#1a1a1a">Scenario 1</text>
+  <text x="62" y="552" font-size="12" fill="#333">copy to USB /</text>
+  <text x="62" y="570" font-size="12" fill="#333">cloud sync folder</text>
+  <rect x="240" y="510" width="170" height="80" rx="8" fill="#fff7ed" stroke="#c4320a"/>
+  <text x="252" y="533" font-size="13" font-weight="600" fill="#1a1a1a">Scenarios 2 + 3</text>
+  <text x="252" y="552" font-size="12" fill="#333">Shadow AI upload,</text>
+  <text x="252" y="570" font-size="12" fill="#333">PowerShell upload</text>
+
+  <!-- Ubuntu VM -->
+  <rect x="470" y="90" width="700" height="520" rx="12" fill="#f1f8f1" stroke="#3f8a4a" stroke-width="1.5"/>
+  <text x="490" y="118" font-size="16" font-weight="700" fill="#22532a">Ubuntu 24.04 server</text>
+  <text x="490" y="138" font-size="12" fill="#22532a">192.168.56.102 · Wazuh 4.14 all-in-one</text>
+
+  <rect x="490" y="400" width="320" height="120" rx="8" fill="#fff" stroke="#3f8a4a"/>
+  <text x="505" y="423" font-size="14" font-weight="600" fill="#1a1a1a">mini SWG: mitmproxy :8080</text>
+  <text x="505" y="443" font-size="12" fill="#333">extracts uploads + prompts, scans them</text>
+  <text x="505" y="461" font-size="12" fill="#333">mini Cloud Registry: category, risk, sanctioned</text>
+  <text x="505" y="479" font-size="12" fill="#333">no-decrypt list (banks, health, MS update)</text>
+  <text x="505" y="497" font-size="12" fill="#333">safety guard: real sites get 403 locally</text>
+  <text x="505" y="513" font-size="12" fill="#555">→ swg.json  (≈ Skyhigh SWG / CASB)</text>
+
+  <rect x="840" y="400" width="310" height="120" rx="8" fill="#fff" stroke="#3f8a4a" stroke-dasharray="5 4"/>
+  <text x="855" y="423" font-size="14" font-weight="600" fill="#1a1a1a">Lab sites *.test (127.0.0.1:8000)</text>
+  <text x="855" y="445" font-size="12" fill="#333">chat.shadow-ai.test  (GenAI, high)</text>
+  <text x="855" y="463" font-size="12" fill="#333">files.quickshare.test (file share, high)</text>
+  <text x="855" y="481" font-size="12" fill="#333">copilot.corp.test   (GenAI, sanctioned)</text>
+  <text x="855" y="503" font-size="12" fill="#555">stores nothing, never leaves the lab</text>
+
+  <rect x="490" y="160" width="660" height="200" rx="8" fill="#22532a"/>
+  <text x="510" y="186" font-size="15" font-weight="700" fill="#fff">Wazuh manager (≈ SIEM / Trellix ePO console)</text>
+  <text x="510" y="212" font-size="12" fill="#d8ecd9">Rules 100110–100112   severity by Thai ID count: low 5 · high 10 · critical 12</text>
+  <text x="510" y="232" font-size="12" fill="#d8ecd9">Rules 100120–100124   destination context: USB, cloud sync, web upload + risk escalation</text>
+  <text x="510" y="252" font-size="12" fill="#d8ecd9">Rules 100140–100141   shadow-AI discovery (uploads with no ID)</text>
+  <text x="510" y="272" font-size="12" fill="#d8ecd9">Rules 100150–100151   PowerShell starts curl / script block uploads a file</text>
+  <text x="510" y="292" font-size="12" fill="#ffd8d3">Correlation 100130/100131 (FIM + scan) · 100152–100154 (PowerShell + SWG, global_frequency)</text>
+  <text x="510" y="312" font-size="12" fill="#ffd8d3">→ level 15 only when two independent sensors agree</text>
+  <text x="510" y="340" font-size="12" fill="#d8ecd9">MITRE T1052.001 · T1567 · T1567.002 · T1059.001   ·   dashboard "PDPA Leak Detection Lab"</text>
+
+  <!-- arrows -->
+  <path d="M410 380 L490 300" stroke="#444" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <text x="425" y="398" font-size="12" fill="#444">1514/tcp</text>
+
+  <path d="M410 461 L490 461" stroke="#444" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <text x="415" y="452" font-size="12" fill="#444">:8080</text>
+
+  <path d="M810 460 L840 460" stroke="#444" stroke-width="2" fill="none" marker-end="url(#a)"/>
+
+  <path d="M650 400 L650 360" stroke="#444" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <text x="658" y="385" font-size="12" fill="#444">swg.json (logcollector)</text>
+
+  <path d="M650 520 L650 575 L414 575" stroke="#b42318" stroke-width="1.6" fill="none" stroke-dasharray="6 4" marker-end="url(#r)"/>
+  <text x="660" y="568" font-size="12" fill="#b42318">real AI / cloud sites: answered 403 by the proxy, nothing sent out</text>
+
+  <text x="30" y="650" font-size="12" fill="#555">Data flow in each scenario: action on endpoint → sensor (scanner, Sysmon, PowerShell, FIM, SWG) → JSON / event log → Wazuh rules → graded alert with MITRE ID.</text>
+  <text x="30" y="672" font-size="12" fill="#555">ISO/IEC 27001:2022 Annex A: 8.12 data leakage prevention · 8.15 logging · 8.16 monitoring activities · 8.23 web filtering.</text>
+</svg>
