@@ -1,0 +1,73 @@
+<!--
+  Day 5: PowerShell-driven uploads, from endpoint telemetry.
+  Install: /var/ossec/etc/rules/pdpa_rules_powershell.xml, then restart the manager.
+  The name sorts after pdpa_rules.xml on purpose: rule files load in name
+  order and 100152-100154 refer to 100122/100123 defined there.
+
+  Inputs (Windows agent):
+    - Sysmon Event 1 (process creation), Wazuh base rule 61603
+    - PowerShell Script Block Logging, Event 4104, Wazuh base rule 91802
+      (enable with the ScriptBlockLogging policy and read the channel
+       Microsoft-Windows-PowerShell/Operational, see agent_ossec_snippet.xml)
+  The lab Sysmon config does not log Event 3 (network) for curl.exe, so the
+  destination comes from the command line and from the SWG (Day 4).
+
+  Monitor mode only: alert, never block.
+-->
+<group name="pdpa,dlp,powershell,">
+
+  <!-- Process view: PowerShell starts curl.exe with an upload option -->
+  <rule id="100150" level="8">
+    <if_sid>61603</if_sid>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)\\(powershell|pwsh)\.exe$</field>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\curl\.exe$</field>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)\s(-F|--form|-T|--upload-file|--data-binary)\s</field>
+    <description>PowerShell started curl.exe to upload a file: $(win.eventdata.commandLine)</description>
+    <mitre><id>T1059.001</id><id>T1567</id></mitre>
+  </rule>
+
+  <!-- Script view: the script block itself sends a file -->
+  <rule id="100151" level="8">
+    <if_sid>91802</if_sid>
+    <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)(curl(\.exe)?\s.*\s(-F|--form|-T|--upload-file|--data-binary)\s|Invoke-(WebRequest|RestMethod)\s.*-InFile)</field>
+    <description>PowerShell script block uploads a file (Event 4104)</description>
+    <mitre><id>T1059.001</id><id>T1567</id></mitre>
+  </rule>
+
+  <!-- Correlation: the endpoint saw PowerShell upload a file AND the SWG
+       found 10+ Thai IDs going to an unsanctioned/critical destination
+       within 120 s. Two independent sensors, so level 15 (dashboard
+       "Critical"), same policy as 100130/100131.
+       Limit: like Day 3, Wazuh cannot join the two events on the file
+       name; it proves "PowerShell uploaded something and the SWG caught
+       Thai IDs in an upload" close together in time.
+       global_frequency: correlation is per agent by default, and here the
+       SWG events come from the manager (agent 000) while the PowerShell
+       events come from win-endpoint-01, so it must look across agents. -->
+  <rule id="100152" level="15" timeframe="120">
+    <global_frequency />
+    <if_sid>100122, 100123</if_sid>
+    <if_matched_sid>100150</if_matched_sid>
+    <description>PDPA CONFIRMED: PowerShell-driven upload, SWG found $(match_count) Thai IDs sent to $(dest_name) by $(dstuser): $(file)</description>
+    <mitre><id>T1059.001</id><id>T1567</id></mitre>
+  </rule>
+
+  <!-- Same correlation when the endpoint event arrives after the SWG event
+       (agent events can lag the manager's own log by a few seconds). -->
+  <rule id="100153" level="15" timeframe="120">
+    <global_frequency />
+    <if_sid>100150</if_sid>
+    <if_matched_sid>100122</if_matched_sid>
+    <description>PDPA CONFIRMED: PowerShell-driven upload after SWG critical upload alert: $(win.eventdata.commandLine)</description>
+    <mitre><id>T1059.001</id><id>T1567</id></mitre>
+  </rule>
+
+  <rule id="100154" level="15" timeframe="120">
+    <global_frequency />
+    <if_sid>100150</if_sid>
+    <if_matched_sid>100123</if_matched_sid>
+    <description>PDPA CONFIRMED: PowerShell-driven upload after SWG escalated upload alert: $(win.eventdata.commandLine)</description>
+    <mitre><id>T1059.001</id><id>T1567</id></mitre>
+  </rule>
+
+</group>

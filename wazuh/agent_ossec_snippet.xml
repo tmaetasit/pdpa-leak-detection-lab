@@ -19,6 +19,13 @@
   <log_format>eventchannel</log_format>
 </localfile>
 
+<!-- 2b. PowerShell Script Block Logging (Event 4104) for Day 5.
+         Turn the policy on first: windows/enable-powershell-logging.ps1 -->
+<localfile>
+  <location>Microsoft-Windows-PowerShell/Operational</location>
+  <log_format>eventchannel</log_format>
+</localfile>
+
 <!-- 3. File Integrity Monitoring, realtime. FIM gives the "file added"
         signal (rule 554) used by correlation rules 100130/100131.
 

@@ -122,13 +122,35 @@ answers any file upload to a real registry service, or any Thai ID sent to a
 real site, with a local 403, so no test data leaves the lab. Setup and test
 steps: `docs/day4-swg.md`.
 
+## PowerShell upload scenario (Day 5, verified end to end)
+
+PowerShell starting `curl.exe` to upload a file is seen on the endpoint twice:
+Sysmon Event 1 (parent `powershell.exe`, upload options on the command line)
+and PowerShell Script Block Logging, Event 4104
+(`windows/enable-powershell-logging.ps1`). When the SWG catches 10+ Thai IDs
+in an upload within 120 s, the two sensors are correlated at level 15.
+
+| Signal | Wazuh rule | Level | MITRE |
+| --- | --- | --- | --- |
+| Sysmon: PowerShell started curl.exe with an upload option | 100150 | 8 | T1059.001, T1567 |
+| Script block (4104) uploads a file | 100151 | 8 | T1059.001, T1567 |
+| PowerShell upload + SWG critical/escalated upload (either order) | 100152–100154 | 15 | T1059.001, T1567 |
+
+Verified in the lab: a PowerShell-driven upload of synthetic files raised
+100151, 100150, 100122/100123 and 100152 (level 15). Two lessons:
+Wazuh correlates `if_matched_sid` per agent by default, and the SWG events
+come from the manager while PowerShell events come from the endpoint, so
+the correlation rules need `<global_frequency />`; and agent events can lag
+the manager's own log, so the correlation exists in both directions.
+Details: `docs/day5-powershell.md`.
+
 ## ISO/IEC 27001:2022 Annex A mapping
 
 | Control | Where in the lab |
 | --- | --- |
 | 8.12 Data leakage prevention | Scanner, USB and upload scenarios |
 | 8.15 Logging | JSON event log, masked values only |
-| 8.16 Monitoring activities | Wazuh rules and dashboard |
+| 8.16 Monitoring activities | Wazuh rules, endpoint telemetry (Sysmon, PowerShell 4104) and dashboard |
 | 8.23 Web filtering | Mini SWG with cloud registry and TLS inspection bypass list |
 
 ## Repository
@@ -143,12 +165,15 @@ datagen/evaluate.py     before/after scoring
 wazuh/pdpa_rules.xml    custom Wazuh rules (levels, MITRE, correlation)
 wazuh/agent_ossec_snippet.xml   agent config
 wazuh/manager_ossec_snippet.xml manager reads the SWG log
+wazuh/pdpa_rules_powershell.xml PowerShell upload rules + correlation (Day 5)
+windows/enable-powershell-logging.ps1  Script Block Logging + agent channel
 swg/pdpa_swg_addon.py   mitmproxy addon: extract uploads, scan, log
 swg/cloud_registry.json mini Cloud Registry + TLS no-decrypt list
 swg/mock_ai_site.py     lab-only fake AI / file-share site
 swg/sample_events.jsonl sample SWG events for wazuh-logtest
 docs/day1-setup.md      lab setup guide (Thai)
 docs/day4-swg.md        mini SWG setup and tests (Thai)
+docs/day5-powershell.md PowerShell scenario setup and tests (Thai)
 ```
 
 ## Quick start
@@ -173,5 +198,5 @@ paths, then `python -m scanner.watcher --config config.json`.
 - [x] Lab build (Day 1)
 - [x] USB scenario verified end to end (Day 3)
 - [x] Mini SWG: Shadow AI upload detection verified end to end (Day 4)
-- [ ] PowerShell exfiltration via Sysmon (Day 5)
+- [x] PowerShell upload detection via Sysmon + Script Block Logging, correlated with the SWG (Day 5)
 - [ ] Dashboard, demo video, case study (Days 6–7)
