@@ -1,0 +1,34 @@
+<!--
+  Add inside <ossec_config> of the Windows agent:
+  C:\Program Files (x86)\ossec-agent\ossec.conf
+  (or append as its own <ossec_config> block at the end of the file).
+  Then restart the agent. Restart-Service can time out while the agent stops;
+  if it does, wait until the service is Stopped, then Start-Service WazuhSvc.
+-->
+
+<!-- 1. Scanner output: one JSON object per line -->
+<localfile>
+  <location>C:\pdpa-lab\logs\pdpa-scanner.json</location>
+  <log_format>json</log_format>
+</localfile>
+
+<!-- 2. Sysmon events (process creation, network, file create) for the
+        PowerShell exfiltration scenario on Day 5 -->
+<localfile>
+  <location>Microsoft-Windows-Sysmon/Operational</location>
+  <log_format>eventchannel</log_format>
+</localfile>
+
+<!-- 3. File Integrity Monitoring, realtime. FIM gives the "file added"
+        signal (rule 554) used by correlation rules 100130/100131.
+
+        USB: watch a test folder, not the whole stick, so personal files on
+        the drive stay out of the SIEM. Check the drive letter in the VM.
+        Most USB sticks are FAT32/exFAT: no ACL, owner or Windows attributes.
+        With the default check_all, FIM fails to read permissions and drops
+        the event silently (debug log: "It was not possible to extract the
+        permissions"). Limit the checks to what the file system has. -->
+<syscheck>
+  <directories realtime="yes" check_all="no" check_size="yes" check_mtime="yes" check_sum="yes">E:\pdpa-test</directories>
+  <directories realtime="yes">C:\Users\tt\Google Drive</directories>
+</syscheck>
