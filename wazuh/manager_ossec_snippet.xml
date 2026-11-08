@@ -4,6 +4,9 @@
   manager) as the source; the endpoint is in srcip and the user in dstuser.
     sudo tee -a /var/ossec/etc/ossec.conf < wazuh/manager_ossec_snippet.xml
     sudo systemctl restart wazuh-manager
+  Create the log file BEFORE the restart (touch /var/log/pdpa-swg/swg.json):
+  if it is missing, logcollector picks it up later and starts at the end of
+  the file, so the first events are never read.
 -->
 <ossec_config>
   <localfile>

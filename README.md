@@ -78,7 +78,7 @@ read permissions and drops the event without an error at normal log level.
 The USB folder therefore uses `check_all="no" check_size="yes" check_mtime="yes" check_sum="yes"`
 (see `wazuh/agent_ossec_snippet.xml`).
 
-## Shadow AI upload scenario (Day 4)
+## Shadow AI upload scenario (Day 4, verified end to end)
 
 A mini Secure Web Gateway: mitmproxy on the Ubuntu VM (`192.168.56.102:8080`),
 the Windows VM's browser uses it as an explicit proxy and trusts its CA.
@@ -95,6 +95,14 @@ category, risk, sanctioned) and writes JSON that the Wazuh manager reads.
 | 1–9 IDs pasted/uploaded to unsanctioned AI | 100124 | 7 | T1567 |
 | File with no ID to unsanctioned AI (shadow AI discovery) | 100141 | 5 | T1567 |
 | File with no ID to another registry service | 100140 | 3 | - |
+
+Verified in the lab (Windows VM `192.168.56.103` → proxy → Wazuh manager):
+curl.exe uploads of synthetic files from the endpoint produced exactly the
+rules in the table above, the six `*.test` uploads reached the mock site
+(HTTP 200) and the ChatGPT upload was answered by the safety guard (HTTP 403)
+without any connection to chatgpt.com. Lesson learned: create
+`/var/log/pdpa-swg/swg.json` before restarting the manager; if the file
+appears later, logcollector starts at its end and skips the first events.
 
 Bypass works at two layers, as in a commercial SWG: the Windows proxy
 override keeps lab traffic off the proxy, and the registry's `no_decrypt`
@@ -157,6 +165,6 @@ paths, then `python -m scanner.watcher --config config.json`.
 - [x] Wazuh rules verified on the manager (wazuh-logtest + live alerts)
 - [x] Lab build (Day 1)
 - [x] USB scenario verified end to end (Day 3)
-- [ ] Mini SWG: Shadow AI upload detection (Day 4): code and rules done, lab test pending
+- [x] Mini SWG: Shadow AI upload detection verified end to end (Day 4)
 - [ ] PowerShell exfiltration via Sysmon (Day 5)
 - [ ] Dashboard, demo video, case study (Days 6–7)

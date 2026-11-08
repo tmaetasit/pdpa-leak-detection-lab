@@ -25,6 +25,7 @@ cd ~/pdpa-lab
 python3 -m venv .venv && .venv/bin/pip install -r requirements-swg.txt
 .venv/bin/python -m pytest -q tests/test_swg.py      # ต้องมี pytest: .venv/bin/pip install pytest
 sudo mkdir -p /var/log/pdpa-swg && sudo chown maetasit: /var/log/pdpa-swg
+touch /var/log/pdpa-swg/swg.json   # สร้างไฟล์ก่อน restart manager (ดูตารางปัญหาด้านล่าง)
 ```
 
 ดู IP ของ Windows VM (`ipconfig` ที่ Windows) แล้วผูกกับชื่อ user:
@@ -118,3 +119,4 @@ curl.exe @p -F "file=@C:\pdpa-lab\testdata\<clean>.docx"    https://chatgpt.com/
 | Edge เปิด `chat.shadow-ai.test` แล้วไปหน้าค้นหา | พิมพ์ `https://` นำหน้า |
 | ไม่มี log แต่เว็บเปิดได้ | Edge ไม่ได้ใช้ proxy (ดู Settings → Proxy) หรือไฟล์เป็นชนิดที่ scanner ไม่อ่าน |
 | alert ไม่ขึ้นแต่ไฟล์ log มีบรรทัด | ลืม localfile ใน `ossec.conf` ของ manager หรือยังไม่ restart manager |
+| บรรทัดแรก ๆ ใน swg.json ไม่ขึ้น alert | ไฟล์ยังไม่มีตอน restart manager (`ossec.log`: error 1103) logcollector เจอไฟล์ทีหลังแล้วอ่านจากท้ายไฟล์ จึงข้ามบรรทัดที่เขียนไปก่อน แก้: `touch` ไฟล์ก่อน restart |
